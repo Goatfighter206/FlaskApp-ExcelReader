@@ -1,0 +1,79 @@
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+import openai
+
+def query_llm(prompt):
+    openai.api_key = OPENAI_API_KEY
+    response = openai.ChatCompletion.create(
+        model="gpt-4",
+        messages=[{"role": "user", "content": prompt}]
+    )
+    return response['choices'][0]['message']['content']
+from flask import Flask, request, render_template
+
+app = Flask(__name__)
+
+@app.route('/ask', methods=['GET', 'POST'])
+def ask():
+    answer = None
+    if request.method == 'POST':
+        user_input = request.form['prompt']
+        answer = query_llm(user_input)
+    return render_template('ask.html', answer=answer)
+from flask import Flask, request, render_template, redirect, url_for, send_from_directory
+import os
+from werkzeug.utils import secure_filename
+import openai
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+UPLOAD_FOLDER = 'uploads'
+ALLOWED_EXTENSIONS = {'xlsx', 'xls'}
+
+app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+# LLM query function
+def query_llm(prompt):
+    openai.api_key = OPENAI_API_KEY
+    response = openai.ChatCompletion.create(
+        model="gpt-4",
+        messages=[{"role": "user", "content": prompt}]
+    )
+    return response['choices'][0]['message']['content']
+
+# Excel upload route (if you already have this, keep your version)
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@app.route('/upload', methods=['GET', 'POST'])
+def upload_file():
+    if request.method == 'POST':
+        file = request.files['file']
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(filepath)
+            return redirect(url_for('uploaded_file', filename=filename))
+    return render_template('upload.html')
+
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
+# LLM interaction route
+@app.route('/ask', methods=['GET', 'POST'])
+def ask():
+    answer = None
+    if request.method == 'POST':
+        user_input = request.form['prompt']
+        answer = query_llm(user_input)
+    return render_template('ask.html', answer=answer)
+
+if __name__ == '__main__':
+    app.run(debug=True)

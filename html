@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head><title>Ask the LLM</title></head>
+<body>
+  <form method="POST">
+    <textarea name="prompt" rows="4" cols="50" placeholder="Ask me anything..."></textarea><br>
+    <button type="submit">Submit</button>
+  </form>
+  {% if answer %}
+    <h3>Response:</h3>
+    <p>{{ answer }}</p>
+  {% endif %}
+</body>
+</html>
