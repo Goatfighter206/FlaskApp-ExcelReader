@@ -77,3 +77,39 @@ def ask():
 
 if __name__ == '__main__':
     app.run(debug=True)
+from flask import Flask, request, render_template
+import openai
+import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
+# Initialize Flask app
+app = Flask(__name__)
+
+# LLM query function
+def query_llm(prompt):
+    openai.api_key = OPENAI_API_KEY
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=[{"role": "user", "content": prompt}]
+        )
+        return response['choices'][0]['message']['content']
+    except Exception as e:
+        return f"Error: {str(e)}"
+
+# Route to interact with the LLM
+@app.route('/ask', methods=['GET', 'POST'])
+def ask():
+    answer = None
+    if request.method == 'POST':
+        user_input = request.form['prompt']
+        answer = query_llm(user_input)
+    return render_template('ask.html', answer=answer)
+
+# Run the app
+if __name__ == '__main__':
+    app.run(debug=True)
