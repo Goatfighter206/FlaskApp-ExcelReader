@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# virtualenv
+.venv/
+venv/
+env/
+
+# uploads
+uploads/
+
+# IDE/editor
+.vscode/
+*.swp
+.DS_Store

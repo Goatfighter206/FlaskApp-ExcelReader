@@ -31,6 +31,11 @@
     <body style="background-color:rgb(255, 255, 255)" >
         </br>
         </br>
+        {% if error %}
+        <div style="color: white; background: #d9534f; padding:8px; border-radius:4px; margin:0 auto; width:60%; text-align:center;">
+          {{ error }}
+        </div>
+        {% endif %}
         <div id="addData" class="modal fade" role="dialog">
             <div class="modal-dialog">
           

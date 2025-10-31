@@ -1,0 +1,32 @@
+import os
+from openai import OpenAI
+
+client = OpenAI(
+    base_url="https://router.huggingface.co/v1",
+    api_key=os.environ["HF_TOKEN"],
+)
+
+completion = client.chat.completions.create(
+    model="moonshotai/Kimi-K2-Instruct-0905",
+    messages=[
+        {
+            "role": "user",
+            "content": "Explain the concept of blockchain technology."
+        }
+    ],
+)
+
+print(completion.choices[0].message)
+import os
+from huggingface_hub import InferenceClient
+
+client = InferenceClient(
+    provider="fal-ai",
+    api_key=os.environ["HF_TOKEN"],
+)
+
+# output is a PIL.Image object
+image = client.text_to_image(
+    "A cute alien creature in a spaceship",
+    model="black-forest-labs/FLUX.1-dev",
+)
