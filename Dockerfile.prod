@@ -1,22 +1,32 @@
-FROM python:3.12-slim
+FROM python:3.12-slim AS builder
 
 WORKDIR /app
 
-# copy minimal runtime requirements and install
+# install build-time / wheel deps into a separate prefix to copy into final image
 COPY requirements.docker.txt /app/requirements.docker.txt
 RUN python -m pip install --upgrade pip \
-    && pip install --no-cache-dir -r /app/requirements.docker.txt
+    && python -m pip install --prefix=/install --no-cache-dir -r /app/requirements.docker.txt
 
-# copy application
+
+FROM python:3.12-slim
+WORKDIR /app
+
+# copy installed packages from builder to runtime image
+COPY --from=builder /install /usr/local
+
+# copy application sources
 COPY . /app
 
-# create uploads dir
+# ensure uploads folder exists and is writable by non-root user
 RUN mkdir -p /app/uploads && chown -R 1000:1000 /app/uploads || true
 
 EXPOSE 8080
+
+# lightweight healthcheck so orchestrators can detect readiness
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s CMD curl -f http://127.0.0.1:8080/health || exit 1
 
 # run as non-root where possible
 USER 1000
 
 # production entry: use gunicorn
-CMD ["gunicorn", "-b", "0.0.0.0:8080", "app:app", "--workers", "4", "--threads", "2"]
+CMD ["gunicorn", "-b", "0.0.0.0:8080", "app:app", "--workers", "2", "--threads", "2"]
