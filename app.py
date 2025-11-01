@@ -3,6 +3,8 @@ from pandas import read_excel, DataFrame
 from werkzeug.utils import secure_filename
 from auth import require_auth
 from security import scan_file
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 import os
 import numpy as np
 import logging
@@ -54,6 +56,20 @@ except Exception:
     logger.warning("RotatingFileHandler not available; continuing without file logs")
 
 
+# rate limiting: protect upload endpoint from abuse
+# small enough so tests and normal usage are unaffected but prevents rapid abuse
+try:
+    limiter = Limiter(
+        app,
+        key_func=get_remote_address,
+        default_limits=[],
+        headers_enabled=True,
+    )
+except Exception:
+    # if Limiter import/config fails (e.g. not installed), proceed without rate limiting
+    logger.warning("Flask-Limiter not available; continuing without rate limits")
+
+
 @app.route("/")
 @require_auth
 def homepage():
@@ -61,6 +77,7 @@ def homepage():
 
 
 @app.route("/output", methods=["POST"])
+@limiter.limit("60/minute")
 def output():
     if request.method == "POST":
         # debug: log incoming form keys and uploaded filenames to help diagnose client uploads

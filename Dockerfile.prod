@@ -19,6 +19,9 @@ COPY . /app
 
 # ensure uploads folder exists and is writable by non-root user
 RUN mkdir -p /app/uploads && chown -R 1000:1000 /app/uploads || true
+# install small runtime utilities needed for healthchecks
+RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 
 EXPOSE 8080
 
