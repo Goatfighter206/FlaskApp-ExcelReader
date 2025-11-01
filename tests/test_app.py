@@ -8,7 +8,10 @@ if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
 _app_path = os.path.join(ROOT, 'app.py')
 spec = importlib.util.spec_from_file_location('app', _app_path)
+assert spec is not None
+assert spec.loader is not None
 app_mod = importlib.util.module_from_spec(spec)
+assert app_mod is not None
 spec.loader.exec_module(app_mod)
 app = app_mod.app
 
