@@ -130,21 +130,27 @@
         <div class="wrapper">
           <div class="container">
             <h1>Select an Excel file</h1>
+            {% if error %}
+            <div style="color: white; background: #d9534f; padding:8px; border-radius:4px; margin-bottom:10px;">
+              {{ error }}
+            </div>
+            {% endif %}
             <div class="upload-container">
               <div class="border-container">
                 <div class='file-input'>
-                  <input type='file' id="myfile" name="excel_file" required accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"/>
+                  <input type='file' id="myfile" name="excel_file" required accept=".xls,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"/>
                   <span class='button'>Choose</span>
                   <span class='label' data-js-label>No file selected</label>
                 </div>
               </div>
             </div>
           </br>
-            <input type="submit" value="Open file" name="openFile" style="display: inline-block;
+            <input type="submit" id="openFileBtn" value="Open file" name="openFile" style="display: inline-block;
             background: rgb(54, 54, 54);
             padding: 8px 16px;
             border-radius: 5px;
             color: rgb(255, 255, 255);"/>
+            <div id="clientError" style="color:#fff;background:#d9534f;padding:8px;border-radius:4px;display:none;margin-top:10px;"></div>
           </div>
         </div>
       </form>
@@ -168,6 +174,41 @@
             label.innerText = value
           }
         }
+
+        // client-side validation: size <= 4MB and extension
+        const MAX_BYTES = 4 * 1024 * 1024
+        const allowedExt = ['.xls', '.xlsx']
+        const fileInputEl = document.getElementById('myfile')
+        const openBtn = document.getElementById('openFileBtn')
+        const clientError = document.getElementById('clientError')
+
+        function showClientError(msg){
+          clientError.innerText = msg
+          clientError.style.display = 'block'
+        }
+
+        function clearClientError(){
+          clientError.innerText = ''
+          clientError.style.display = 'none'
+        }
+
+        openBtn.addEventListener('click', function(ev){
+          clearClientError()
+          const f = fileInputEl.files && fileInputEl.files[0]
+          if(!f){
+            showClientError('Please select a file before opening')
+            ev.preventDefault(); return
+          }
+          if(f.size > MAX_BYTES){
+            showClientError('File too large. Maximum allowed is 4 MB.')
+            ev.preventDefault(); return
+          }
+          const name = f.name.toLowerCase()
+          if(!allowedExt.some(e => name.endsWith(e))){
+            showClientError('Unsupported file type. Please select .xls or .xlsx file.')
+            ev.preventDefault(); return
+          }
+        })
       </script>
     </body>
 </html>
